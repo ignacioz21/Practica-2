@@ -2,9 +2,11 @@ namespace Abstracciones.Agentes;
 
 public interface IAgenteDa
 {
-    Task<AgenteDto> Crear(AgenteCrearDto agente);
-    Task<bool> Actualizar(int id, AgenteActualizarDto agente);
-    Task<AgenteDto> ObtenerPorId(int id);
-    Task<List<AgenteDto>> ObtenerTodos();
-    Task<bool> Eliminar(int id);
+    Task<Agente> Crear(Agente agente, CancellationToken ct);
+    Task<bool> Actualizar(int id, Agente agente, CancellationToken ct);
+    Task<Agente?> ObtenerPorId(int id, CancellationToken ct);
+    Task<List<Agente>> ObtenerTodos(CancellationToken ct);
+    Task<bool> Eliminar(int id, CancellationToken ct);
+    Task<Agente?> ObtenerPorCorreoAsync(string correo, CancellationToken ct);
+     
 }

@@ -6,7 +6,9 @@ public record AgenteDto(
     string Nombre,
     string Correo,
     string Telefono,
-    int CantidadTickets
+    int CantidadTickets,
+    bool Activo,
+    DateTime FechaCreacion
 );
 
 public class AgenteCrearDto
@@ -26,6 +28,11 @@ public class AgenteCrearDto
 
     [Range(0, 50, ErrorMessage = "La cantidad de tickets debe estar entre 0 y 50")]
     public int CantidadTickets { get; set; } = 0;
+    
+    public bool Activo { get; set; } = true;
+    
+    [Required(ErrorMessage = "El campo fecha")]
+    public DateTime FechaCreacion { get; set; }
 }
 
 public class AgenteActualizarDto : AgenteCrearDto { }
