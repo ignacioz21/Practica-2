@@ -3,13 +3,17 @@ using System.ComponentModel.DataAnnotations;
 namespace Abstracciones.Agentes;
 
 public record AgenteDto(
+    int Id,
     string Nombre,
     string Correo,
     string Telefono,
     int CantidadTickets,
     bool Activo,
     DateTime FechaCreacion
-);
+)
+{
+    public int AgenteId => Id;
+}
 
 public class AgenteCrearDto
 {
@@ -31,8 +35,7 @@ public class AgenteCrearDto
     
     public bool Activo { get; set; } = true;
     
-    [Required(ErrorMessage = "El campo fecha")]
-    public DateTime FechaCreacion { get; set; }
+    public DateTime? FechaCreacion { get; set; }
 }
 
 public class AgenteActualizarDto : AgenteCrearDto { }

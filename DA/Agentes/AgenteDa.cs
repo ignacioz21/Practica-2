@@ -36,6 +36,7 @@ public class AgenteDa : IAgenteDa
         
         agenteBuscar.Nombre = agente.Nombre;
         agenteBuscar.Correo = agente.Correo;
+        agenteBuscar.Telefono = agente.Telefono;
         agenteBuscar.CantidadTickets = agente.CantidadTickets;
         agenteBuscar.Activo = agente.Activo;
 
@@ -50,18 +51,8 @@ public class AgenteDa : IAgenteDa
         return true;
     }
 
-    public async Task<Agente?> ObtenerPorId(int id, CancellationToken ct)
-    {
-        try
-        {
-            return await _contexto.Agentes.AsNoTracking().FirstOrDefaultAsync(a => a.AgenteId == id, ct);
-        }
-        catch
-        {
-            throw new ConflictoException("Ya existe un agente con el mismo nombre");
-            
-        }
-    }
+    public Task<Agente?> ObtenerPorId(int id, CancellationToken ct) =>
+        _contexto.Agentes.AsNoTracking().FirstOrDefaultAsync(a => a.AgenteId == id, ct);
 
     public async Task<List<Agente>> ObtenerTodos(CancellationToken ct)
     {

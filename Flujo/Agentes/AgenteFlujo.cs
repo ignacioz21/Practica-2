@@ -1,6 +1,5 @@
 using Abstracciones.Agentes;
 using Abstracciones.Excepciones;
-using Flujo.Clientes;
 
 namespace Flujo.Agentes;
 
@@ -15,31 +14,59 @@ public class AgenteFlujo : IAgenteFlujo
         _reloj = reloj;
     }
 
-    public async Task<AgenteDto> Crear(Agente agente, CancellationToken ct)
+    public async Task<AgenteDto> Crear(AgenteCrearDto dto, CancellationToken ct = default)
+    {
+        var agente = new Agente
+        {
+            Nombre = dto.Nombre.Trim(),
+            Correo = dto.Correo.Trim().ToLowerInvariant(),
+            Telefono = dto.Telefono.Trim(),
+            CantidadTickets = dto.CantidadTickets,
+            Activo = dto.Activo,
+            FechaCreacion = dto.FechaCreacion ?? _reloj.GetUtcNow().UtcDateTime
+        };
+        return await Crear(agente, ct);
+    }
+
+    public async Task<AgenteDto> Crear(Agente agente, CancellationToken ct = default)
     {
         var correo = agente.Correo.Trim().ToLowerInvariant();
         if (await _da.ObtenerPorCorreoAsync(correo, ct) is not null)
-            throw new ConflictoException($"Ya existe un cliente con el correo '{correo}'.");        
+            throw new ConflictoException($"Ya existe un agente con el correo '{correo}'.");        
         
-        agente = new Agente
+        var nuevo = new Agente
         {
-            Nombre = agente.Nombre,
+            Nombre = agente.Nombre.Trim(),
             Correo = correo,
-            Telefono = agente.Telefono,
+            Telefono = agente.Telefono.Trim(),
             CantidadTickets = agente.CantidadTickets,
             Activo = agente.Activo,
-            FechaCreacion = _reloj.GetUtcNow().UtcDateTime,
+            FechaCreacion = agente.FechaCreacion != default ? agente.FechaCreacion : _reloj.GetUtcNow().UtcDateTime,
         };
         
-        await _da.Crear(agente, ct);
-        return AgenteMapeador.ADto(agente);
+        await _da.Crear(nuevo, ct);
+        return AgenteMapeador.ADto(nuevo);
     }
 
-    public async Task<bool> Actualizar(int id, AgenteDto agente, CancellationToken ct)
+    public async Task<bool> Actualizar(int id, AgenteActualizarDto dto, CancellationToken ct = default)
+    {
+        var agenteDto = new AgenteDto(
+            id,
+            dto.Nombre.Trim(),
+            dto.Correo.Trim().ToLowerInvariant(),
+            dto.Telefono.Trim(),
+            dto.CantidadTickets,
+            dto.Activo,
+            dto.FechaCreacion ?? _reloj.GetUtcNow().UtcDateTime
+        );
+        return await Actualizar(id, agenteDto, ct);
+    }
+
+    public async Task<bool> Actualizar(int id, AgenteDto agente, CancellationToken ct = default)
     {
         var correo = agente.Correo.Trim().ToLowerInvariant();
 
-        _ = await _da.ObtenerPorId(id, ct) ?? throw new NoEncontradoException($"No se encontró el agente con id '{id}'.", id);
+        _ = await _da.ObtenerPorId(id, ct) ?? throw new NoEncontradoException("Agente", id);
 
         var otro = await _da.ObtenerPorCorreoAsync(correo, ct);
         
@@ -49,32 +76,34 @@ public class AgenteFlujo : IAgenteFlujo
         var actualizado = await _da.Actualizar(id, new Agente
         {
             AgenteId = id,
-            Nombre = agente.Nombre,
+            Nombre = agente.Nombre.Trim(),
             Correo = correo,
-            Telefono = agente.Telefono,
+            Telefono = agente.Telefono.Trim(),
             CantidadTickets = agente.CantidadTickets,
             Activo = agente.Activo
         }, ct);
-        if (!actualizado) throw new NoEncontradoException("Cliente", id);
+        if (!actualizado) throw new NoEncontradoException("Agente", id);
         return true;
     }
 
-    public async Task<AgenteDto> ObtenerPorId(int id, CancellationToken ct)
+    public async Task<AgenteDto> ObtenerPorId(int id, CancellationToken ct = default)
     {
         var agente = await _da.ObtenerPorId(id, ct)
-                     ?? throw new NoEncontradoException("Cliente", id);
+                     ?? throw new NoEncontradoException("Agente", id);
         return AgenteMapeador.ADto(agente);
     }
-        
 
-    public Task<List<Agente>> ObtenerTodos(CancellationToken ct)
+    public async Task<List<AgenteDto>> ObtenerTodos(CancellationToken ct = default)
     {
-        return _da.ObtenerTodos(ct);
+        var agentes = await _da.ObtenerTodos(ct);
+        return agentes.Select(AgenteMapeador.ADto).ToList();
     }
 
-    public async Task<bool> Eliminar(int id, CancellationToken ct)
+    public async Task<bool> Eliminar(int id, CancellationToken ct = default)
     {
-        _ = await _da.ObtenerPorId(id, ct) ?? throw new NoEncontradoException("Cliente", id);
+        _ = await _da.ObtenerPorId(id, ct) ?? throw new NoEncontradoException("Agente", id);
+        var eliminado = await _da.Eliminar(id, ct);
+        if (!eliminado) throw new NoEncontradoException("Agente", id);
         return true;
     }
 }

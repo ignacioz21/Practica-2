@@ -13,6 +13,7 @@ public interface ITicketFlujo
     Task<TicketResumenDto> ResumenAsync(CancellationToken ct);
     Task AsignarEtiquetaAsync(int ticketId, int etiquetaId, CancellationToken ct);
     Task QuitarEtiquetaAsync(int ticketId, int etiquetaId, CancellationToken ct);
+    Task<TicketDto> AsignarAgenteAsync(int ticketId, int? agenteId, CancellationToken ct);
 
     /// <summary>Genera el CSV (UTF-8 con BOM, para que Excel respete las tildes) con los tickets que cumplan el filtro.</summary>
     Task<byte[]> ExportarCsvAsync(TicketFiltro filtro, CancellationToken ct);

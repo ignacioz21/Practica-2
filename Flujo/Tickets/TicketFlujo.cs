@@ -77,6 +77,7 @@ public class TicketFlujo : ITicketFlujo
             Prioridad = dto.Prioridad,
             Estado = EstadoTicket.Abierto,
             ClienteId = dto.ClienteId,
+            AgenteId = dto.AgenteId,
             FechaCreacion = ahora,
             FechaActualizacion = ahora
         };
@@ -165,6 +166,20 @@ public class TicketFlujo : ITicketFlujo
             throw new NoEncontradoException("Asignación de etiqueta", $"{ticketId}/{etiquetaId}");
     }
 
+    public async Task<TicketDto> AsignarAgenteAsync(int ticketId, int? agenteId, CancellationToken ct)
+    {
+        var ticket = await _da.ObtenerParaActualizarAsync(ticketId, ct) ?? throw new NoEncontradoException("Ticket", ticketId);
+
+        if (ticket.Estado == EstadoTicket.Cerrado)
+            throw new ConflictoException("El ticket está cerrado y no admite cambios de agente.");
+
+        ticket.AgenteId = agenteId;
+        ticket.FechaActualizacion = _reloj.GetUtcNow().UtcDateTime;
+
+        await _da.GuardarCambiosAsync(ct);
+        return await ObtenerAsync(ticketId, ct);
+    }
+
     public async Task<byte[]> ExportarCsvAsync(TicketFiltro filtro, CancellationToken ct)
     {
         // Se exporta TODO lo que cumpla el filtro (sin el límite de 50 de la paginación), con un tope de seguridad.
@@ -175,6 +190,7 @@ public class TicketFlujo : ITicketFlujo
             Estado = filtro.Estado,
             Prioridad = filtro.Prioridad,
             ClienteId = filtro.ClienteId,
+            AgenteId = filtro.AgenteId,
             Desde = filtro.Desde,
             Hasta = filtro.Hasta,
             Q = filtro.Q,

@@ -19,6 +19,9 @@ public class TicketCrearDto
 
     [Range(1, int.MaxValue, ErrorMessage = "ClienteId debe ser mayor o igual a 1.")]
     public int ClienteId { get; set; }
+
+    [Range(1, int.MaxValue, ErrorMessage = "AgenteId debe ser mayor o igual a 1.")]
+    public int? AgenteId { get; set; }
 }
 
 public class TicketCambiarEstadoDto
@@ -33,6 +36,16 @@ public class TicketCambiarEstadoDto
 
     [EnumDataType(typeof(PrioridadTicket))]
     public PrioridadTicket? Prioridad { get; set; }
+}
+
+/// <summary>
+/// Entrada para asignar o reasignar un agente a un ticket existente.
+/// </summary>
+public class TicketAsignarAgenteDto
+{
+    [Required(ErrorMessage = "El AgenteId es obligatorio.")]
+    [Range(1, int.MaxValue, ErrorMessage = "AgenteId debe ser mayor o igual a 1.")]
+    public int? AgenteId { get; set; }
 }
 
 public record TicketDto(
@@ -62,6 +75,9 @@ public class TicketFiltro : ParametrosPaginacion, IValidatableObject
 
     [Range(1, int.MaxValue)]
     public int? ClienteId { get; set; }
+
+    [Range(1, int.MaxValue)]
+    public int? AgenteId { get; set; }
 
     public DateTime? Desde { get; set; }
     public DateTime? Hasta { get; set; }

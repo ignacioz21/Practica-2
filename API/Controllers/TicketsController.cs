@@ -73,6 +73,21 @@ public class TicketsController : ControllerBase
     public async Task<ActionResult<TicketDto>> CambiarEstado(int id, TicketCambiarEstadoDto dto, CancellationToken ct) =>
         Ok(await _flujo.CambiarEstadoAsync(id, dto, ct));
 
+    [HttpPatch("{id:int:min(1)}/agente")]
+    [ProducesResponseType<TicketDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<TicketDto>> AsignarAgente(int id, TicketAsignarAgenteDto dto, CancellationToken ct) =>
+        Ok(await _flujo.AsignarAgenteAsync(id, dto.AgenteId, ct));
+
+    [HttpPut("{id:int:min(1)}/agente/{agenteId:int:min(1)}")]
+    [ProducesResponseType<TicketDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<TicketDto>> AsignarAgentePorRuta(int id, int agenteId, CancellationToken ct) =>
+        Ok(await _flujo.AsignarAgenteAsync(id, agenteId, ct));
+
     /// <summary>PUT porque es idempotente: asignar dos veces la misma etiqueta no debería cambiar nada más (la segunda responde 409).</summary>
     [HttpPut("{id:int:min(1)}/etiquetas/{etiquetaId:int:min(1)}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

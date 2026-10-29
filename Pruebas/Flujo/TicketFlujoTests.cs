@@ -154,4 +154,43 @@ public class TicketFlujoTests
     {
         Assert.Equal(esperado, FormatoCodigoTicket.EsValido(codigo));
     }
+
+    [Fact]
+    public async Task Crear_ConAgenteId_AsignaAgente()
+    {
+        _clienteDA.Setup(c => c.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(new Cliente { Id = 1 });
+        _da.Setup(d => d.ContarPorAnioAsync(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(0);
+
+        Ticket? guardado = null;
+        _da.Setup(d => d.AgregarAsync(It.IsAny<Ticket>(), It.IsAny<CancellationToken>()))
+           .Callback<Ticket, CancellationToken>((t, _) => { t.Id = 20; guardado = t; })
+           .ReturnsAsync((Ticket t, CancellationToken _) => t);
+        _da.Setup(d => d.ObtenerPorIdAsync(20, It.IsAny<CancellationToken>()))
+           .ReturnsAsync(() => guardado);
+
+        var resultado = await _flujo.CrearAsync(
+            new TicketCrearDto { Titulo = "Titulo con agente", Descripcion = "Descripcion larga", ClienteId = 1, AgenteId = 5 },
+            CancellationToken.None);
+
+        Assert.Equal(5, resultado.AgenteId);
+    }
+
+    [Fact]
+    public async Task AsignarAgente_TicketAbierto_AsignaAgente()
+    {
+        TicketEn(EstadoTicket.Abierto);
+
+        var resultado = await _flujo.AsignarAgenteAsync(1, 3, CancellationToken.None);
+
+        Assert.Equal(3, resultado.AgenteId);
+        _da.Verify(d => d.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AsignarAgente_TicketCerrado_LanzaConflicto()
+    {
+        TicketEn(EstadoTicket.Cerrado);
+
+        await Assert.ThrowsAsync<ConflictoException>(() => _flujo.AsignarAgenteAsync(1, 3, CancellationToken.None));
+    }
 }
